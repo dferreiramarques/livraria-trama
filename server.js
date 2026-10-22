@@ -43,8 +43,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Cria o primeiro utilizador admin, se a BD estiver vazia
+// Cria o primeiro utilizador admin, se a BD estiver vazia; se ADMIN_PASSWORD
+// estiver definido no ambiente, redefine a password do admin em cada arranque (para deploys).
+function setAdminPassword(username, password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  db.db.prepare("UPDATE users SET pw_hash = ?, salt = ? WHERE username = ?")
+    .run(require("./src/auth").hashPassword(password, salt), salt, username);
+}
 (function bootstrapAdmin() {
+  const user = process.env.ADMIN_USER || "trama";
+  if (process.env.ADMIN_PASSWORD) {
+    setAdminPassword(user, process.env.ADMIN_PASSWORD);
+    console.log(`[bootstrap] password do admin "${user}" sincronizada a partir do ambiente.`);
+    return;
+  }
   const row = db.db.prepare("SELECT COUNT(*) AS c FROM users").get();
   if (row.c === 0) {
     const user = process.env.ADMIN_USER || "trama";
