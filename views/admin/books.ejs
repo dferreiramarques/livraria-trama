@@ -1,0 +1,78 @@
+<%- include('../partials/admin-top') %>
+
+<h1>livros do catálogo</h1>
+
+<section class="isbn-quick">
+  <form method="post" action="/admin/livros/isbn" class="isbn-form">
+    <label for="isbn-input">adicionar por ISBN</label>
+    <input id="isbn-input" name="isbn" placeholder="ex.: 9789723716479" inputmode="numeric" required>
+    <button class="botao" type="submit">/buscar no Google</button>
+  </form>
+  <p class="tono">capa, título, autor, editora e resumo vêm do Google Books; a ficha fica criada e aberta na edição (preço, stock, tema). se o ISBN já existir, abre a ficha em vez de duplicar.</p>
+  <% if (erro) { %><p class="erro">não deu: <%= erro %></p><% } %>
+</section>
+
+<form class="filtros" method="get" action="/admin/livros">
+  <input type="search" name="q" value="<%= q %>" placeholder="procura título, autor, ISBN…">
+  <button class="botao mini" type="submit">filtrar</button>
+  <nav class="chips-estado">
+    <a class="chip <%= f === 'em' ? 'chip-activo' : '' %>" href="/admin/livros?f=em<%= q ? '&q=' + encodeURIComponent(q) : '' %>">em prateleira</a>
+    <a class="chip <%= f === 'np' ? 'chip-activo' : '' %>" href="/admin/livros?f=np<%= q ? '&q=' + encodeURIComponent(q) : '' %>">não-publicado</a>
+    <a class="chip <%= f === 'sold' ? 'chip-activo' : '' %>" href="/admin/livros?f=sold<%= q ? '&q=' + encodeURIComponent(q) : '' %>">vendidos</a>
+    <a class="chip <%= f === 'all' ? 'chip-activo' : '' %>" href="/admin/livros?f=all<%= q ? '&q=' + encodeURIComponent(q) : '' %>">todos</a>
+  </nav>
+  <a class="botao mini fantasma" href="/admin/livros/novo">+ à mão</a>
+</form>
+
+<table class="admin-tabela">
+  <tr>
+    <th>título</th><th>autor</th><th>editora</th><th>isbn</th><th>categoria</th>
+    <th class="num">preço</th><th class="num">stock</th><th>estado</th><th class="num">acções</th>
+  </tr>
+  <% books.forEach(function (b) { %>
+    <tr class="<%= b.status !== 'available' ? 'linha-sold' : '' %>">
+      <td><a href="/admin/livros/<%= b.id %>/editar"><%= b.title %></a><%= b.featured ? ' ★' : '' %></td>
+      <td><%= b.author %></td>
+      <td><%= b.publisher %></td>
+      <td class="mono"><%= b.isbn %></td>
+      <td><%= b.category %></td>
+      <td class="num"><%= fmt(b.price_cents) %></td>
+      <td class="num">
+        <% if (b.status === 'available') { %>
+          <form method="post" action="/admin/livros/<%= b.id %>/acao" class="inline">
+            <input type="hidden" name="action" value="stock">
+            <button class="mini-btn" name="delta" value="-1">−</button>
+          </form>
+          <%= b.stock %>
+          <form method="post" action="/admin/livros/<%= b.id %>/acao" class="inline">
+            <input type="hidden" name="action" value="stock">
+            <button class="mini-btn" name="delta" value="1">+</button>
+          </form>
+        <% } else { %>—<% } %>
+      </td>
+      <td>
+        <% if (b.status === 'available') { %>em prateleira
+        <% } else if (b.status === 'unpublished') { %>não-publicado
+        <% } else { %>vendido — fora do cat.<% } %>
+      </td>
+      <td class="num">
+        <form method="post" action="/admin/livros/<%= b.id %>/acao" class="inline">
+          <% if (b.status === 'available') { %>
+            <input type="hidden" name="action" value="sair">
+            <button class="botao mini perigo" title="tira do catálogo — fica na secção não-publicado">saída</button>
+          <% } else { %>
+            <input type="hidden" name="action" value="restaurar">
+            <button class="botao mini fantasma" title="volta ao catálogo público">publicar</button>
+          <% } %>
+        </form>
+        <form method="post" action="/admin/livros/<%= b.id %>/acao" class="inline">
+          <input type="hidden" name="action" value="apagar">
+          <button class="mini-sub" onclick="return confirm('apagar só se nunca foi encomendado; senão vira não-publicado. continuar?')">✕</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  <% if (!books.length) { %><tr><td colspan="9" class="vazio">nada nesta secção.</td></tr><% } %>
+</table>
+
+<%- include('../partials/admin-bottom') %>

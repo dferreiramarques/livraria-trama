@@ -1,0 +1,51 @@
+<%- include('../partials/admin-top') %>
+
+<h1>eventos & exposições</h1>
+<p class="tono">o que ainda não aconteceu → agenda (site). o que já aconteceu → arquivo (evento antigo publicado).</p>
+
+<section class="duas-colunas">
+  <div>
+    <h2>novo</h2>
+    <form method="post" action="/admin/eventos/save" class="ficha-form">
+      <label>título <input name="title" required></label>
+      <select name="kind">
+        <option value="evento">evento / conversa / lançamento</option>
+        <option value="exposicao">exposição</option>
+      </select>
+      <div class="campo-duplo">
+        <label>início <input type="datetime-local" name="starts_at" required></label>
+        <label>fim (exposições) <input type="datetime-local" name="ends_at"></label>
+      </div>
+      <label>descrição <textarea name="description" rows="3"></textarea></label>
+      <label>imagem (URL) <input name="image_url"></label>
+      <label class="checkbox"><input type="checkbox" name="published" checked> publicar no site</label>
+      <button class="botao" type="submit">publicar</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>todos (<%= events.length %>)</h2>
+    <table class="admin-tabela">
+      <tr><th>título</th><th>tipo</th><th>data</th><th>publicado</th><th></th></tr>
+      <% events.forEach(function (e) { %>
+        <tr>
+          <td><%= e.title %></td>
+          <td><%= e.kind === 'exposicao' ? 'exposição' : 'evento' %></td>
+          <td class="mono"><%= e.starts_at.slice(0, 16).replace('T', ' ') %></td>
+          <td><%= e.published ? 'sim' : 'não' %></td>
+          <td class="num">
+            <form method="post" action="/admin/eventos/<%= e.id %>/acao" class="inline">
+              <button class="mini-btn" name="action" value="toggle" title="publicar / esconder"><%= e.published ? '▾' : '▸' %></button>
+            </form>
+            <form method="post" action="/admin/eventos/<%= e.id %>/acao" class="inline" onsubmit="return confirm('apagar evento?')">
+              <button class="mini-sub" name="action" value="apagar">✕</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!events.length) { %><tr><td colspan="5" class="vazio">sem eventos.</td></tr><% } %>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/admin-bottom') %>

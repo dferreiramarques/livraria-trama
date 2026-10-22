@@ -1,0 +1,81 @@
+<%- include('../partials/admin-top') %>
+
+<h1>definições</h1>
+<% if (saved) { %><p class="aviso ok">gravado.</p><% } %>
+
+<form method="post" action="/admin/definicoes">
+  <h2>loja</h2>
+  <div class="campo-duplo">
+    <label>nome <input name="store_name" value="<%= s.store_name %>"></label>
+    <label>morada <input name="store_address" value="<%= s.store_address %>"></label>
+  </div>
+  <div class="campo-duplo">
+    <label>horário (texto) <input name="store_hours" value="<%= s.store_hours %>"></label>
+    <label>email da loja <input name="store_email" value="<%= s.store_email %>"></label>
+  </div>
+  <div class="campo-duplo">
+    <label>telefone <input name="store_phone" value="<%= s.store_phone %>"></label>
+    <label>instagram @<input name="ig_handle" value="<%= s.ig_handle %>"></label>
+  </div>
+
+  <h2>envio</h2>
+  <div class="campo-trio">
+    <label>porte em cêntimos <input name="shipping_cents" value="<%= s.shipping_cents %>"></label>
+    <label>grátis a partir de (cêntimos) <input name="free_shipping_cents" value="<%= s.free_shipping_cents %>"></label>
+  </div>
+  <p class="tono">350 = 3,50 € · grátis a partir de 4500 (45 €)</p>
+
+  <h2>pagamento manual (transferência)</h2>
+  <div class="campo-duplo">
+    <label>IBAN <input name="iban" value="<%= s.iban %>" placeholder="PT50 …"></label>
+    <label>MB WAY / telemóvel <input name="mbway" value="<%= s.mbway %>"></label>
+  </div>
+
+  <h2>Instagram</h2>
+  <p class="tono">a ligação faz-se em <a href="/admin/novidades">Novidades</a> (passo a passo + botão de autorizar). Campos de apoio do OAuth e do token:</p>
+  <div class="campo-trio">
+    <label>client id (Instagram App ID) <input name="ig_client_id" value="<%= s.ig_client_id %>" placeholder="123456…"></label>
+    <label>client secret <input name="ig_client_secret" value="<%= s.ig_client_secret %>"></label>
+    <label>callback <input name="ig_callback" value="<%= s.ig_callback %>" placeholder="http://localhost:3000/admin/instagram/callback"></label>
+  </div>
+  <div class="campo-duplo">
+    <label>access token (automático no fluxo, edita só se souberes) <input name="ig_access_token" value="<%= s.ig_access_token %>" placeholder="IGAA…"></label>
+    <label>user id <input name="ig_user_id" value="<%= s.ig_user_id %>" placeholder="17841…"></label>
+  </div>
+
+  <h2>Moloni (faturação)</h2>
+  <p class="tono">em <a href="https://www.moloni.pt" target="_blank" rel="noopener">Moloni</a> → Developers/Api → criar API client (client id + secret + username da conta). A fatura-simplificada sai de cada encomenda marcada como paga.</p>
+  <div class="campo-duplo">
+    <label>client id <input name="moloni_client_id" value="<%= s.moloni_client_id %>"></label>
+    <label>client secret <input name="moloni_client_secret" value="<%= s.moloni_client_secret %>"></label>
+  </div>
+  <div class="campo-trio">
+    <label>username (email da conta) <input name="moloni_username" value="<%= s.moloni_username %>"></label>
+    <label>company id <input name="moloni_company_id" value="<%= s.moloni_company_id %>"></label>
+    <label>ativar (1/0) <input name="moloni_enabled" value="<%= s.moloni_enabled %>"></label>
+  </div>
+  <div class="campo-trio">
+    <label>customer id (cliente "Livraria") <input name="moloni_customer_id" value="<%= s.moloni_customer_id %>"></label>
+    <label>product id genérico (ex.: 1) <input name="moloni_generic_product_id" value="<%= s.moloni_generic_product_id %>"></label>
+    <label>vat_id para PT normal (23%) <input name="moloni_vat_id" value="<%= s.moloni_vat_id || '2' %>"></label>
+  </div>
+
+  <h2>chat</h2>
+  <label>mensagem de entrada <input name="chat_welcome" value="<%= s.chat_welcome %>"></label>
+
+  <h2>livestream</h2>
+  <p class="tono">cola o endereço de player (YouTube/Twitch) — aparece em <a href="/livestream">/livestream</a> quando houver emissão.</p>
+  <label>URL do player <input name="stream_url" value="<%= s.stream_url %>" placeholder="https://www.youtube.com/embed/…"></label>
+
+  <div class="horizontais" style="margin:1.5rem 0">
+    <button class="botao" type="submit">gravar tudo</button>
+  </div>
+</form>
+
+<h2>conta '<%= username %>'</h2>
+<form method="post" action="/admin/conta" class="inline-form">
+  <label>nova password (mín. 8) <input type="password" name="new_password" minlength="8" required></label>
+  <button class="botao mini" type="submit">mudar password</button>
+</form>
+
+<%- include('../partials/admin-bottom') %>

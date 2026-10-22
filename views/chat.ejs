@@ -1,0 +1,31 @@
+<%- include('partials/head', { title: 'FreeSpeach' }) %>
+
+<section class="seccao">
+  <h1>conversa anónima</h1>
+  <p class="tono">estilo web dos anos 2000: sem contas, sem rastreio, só texto. regras: respeito, spoilers de comics à vista, humanos dos dois lados.</p>
+
+  <div class="janela-irc">
+    <pre id="irc-frame-topo" class="irc-frame">+--[ FreeSpeach @ irc.livrariatrama.com ]------[ Porto ]---</pre>
+
+    <div class="irc-corpo">
+      <pre id="irc-log" class="irc-log" aria-live="polite">* <%= settings.chat_welcome %>
+</pre>
+      <pre id="irc-users" class="irc-users">* trama (bot)
+</pre>
+    </div>
+
+    <div class="irc-entrada">
+      &lt;<input id="irc-nick" maxlength="18" placeholder="nick" spellcheck="false">
+      <input id="irc-mensagem" maxlength="420" placeholder="mensagem... (enter = enviar)" spellcheck="false">
+      <button id="irc-enviar">enviar</button>
+    </div>
+
+    <pre id="irc-frame-fim" class="irc-frame">+-------------------------------------------------------------</pre>
+    <p id="irc-estado" class="irc-estado">a ligar...</p>
+  </div>
+
+  <p class="tono mini-note">mensagens guardadas na base de dados local, moderadas pelo site. nao guardamos ips - apenas um hash antisspam anonimo.</p>
+</section>
+
+<script src="/js/chat.js"></script>
+<%- include('partials/foot') %>

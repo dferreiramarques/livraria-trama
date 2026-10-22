@@ -1,0 +1,55 @@
+<%- include('partials/head', { title: 'encomenda ' + order.code }) %>
+
+<section class="seccao">
+  <h1>encomenda <span class="codigo"><%= order.code %></span></h1>
+
+  <ol class="passos">
+    <li class="<%= order.status === 'new' ? 'corrente' : '' %> <%= order.status !== 'new' ? ' feito' : '' %>">recebida</li>
+    <li class="<%= order.status === 'confirmed' ? 'corrente' : (['shipped','ready','done'].includes(order.status) ? ' feito' : '') %>">pronta<%= order.delivery === 'ship' ? ' a envio' : ' para recolha' %></li>
+    <li class="<%= ['shipped','done'].includes(order.status) ? 'feito o-ship' : (order.status === 'shipped' ? 'feito' : '') %>">enviada</li>
+    <li class="<%= order.status === 'done' ? 'feito' : '' %>">entregue</li>
+  </ol>
+
+  <% if (order.status === 'canceled' || order.payment_status === 'canceled') { %>
+    <p class="aviso">encomenda cancelada. fala connosco se houver algum lapso.</p>
+  <% } %>
+
+  <table class="tabela">
+    <% items.forEach(function (i) { %>
+      <tr><td><%= i.title %></td><td>×<%= i.qty %></td><td class="num"><%= fmt(i.unit_price_cents * i.qty) %></td></tr>
+    <% }) %>
+    <% if (order.shipping_cents > 0) { %><tr><td colspan="2">envio</td><td class="num"><%= fmt(order.shipping_cents) %></td></tr><% } %>
+    <tr class="total"><td>total</td><td></td><td class="num"><%= fmt(order.total_cents) %></td></tr>
+  </table>
+
+  <div class="pago-aqui">
+    <% if (order.payment_status === 'paid') { %>
+      <p class="aviso ok">✓ pago — obrigado. seguimos daqui.</p>
+      <% if (order.payment_method === 'transfer') { %><p class="tono">recebemos a transferência e confirmou (código <%= order.code %>).</p><% } %>
+    <% } else { %>
+      <% if (payUrl) { %>
+        <a class="botao grande" href="<%= payUrl %>">pagar online — cartão, Multibanco ou MB WAY</a>
+      <% } else if (order.payment_method === 'stripe') { %>
+        <p class="aviso">pagamento online indisponível neste momento — envia-nos esse troco por transferência ou paga na loja, fala-nos do código <%= order.code %>.</p>
+      <% } %>
+
+      <% if (order.payment_method === 'transfer') { %>
+        <p>transferência para:</p>
+        <p class="kv"><b>IBAN</b> <%= settings.iban || '(a definir)' %></p>
+        <p class="kv"><b>MB WAY</b> <%= settings.mbway || '(a definir)' %></p>
+        <p class="tono">referência obrigatória: <b><%= order.code %></b></p>
+      <% } %>
+
+      <% if (order.payment_method === 'store') { %>
+        <p class="tono">pagar em mãos na recolha na loja.</p>
+      <% } %>
+    <% } %>
+  </div>
+
+  <div class="ficha">
+    <p class="tono">entrega: <%= order.delivery === 'ship' ? 'envio para ' + [order.address, order.postal, order.city].filter(Boolean).join(', ') : 'recolha na loja' %></p>
+    <p class="tono">qualquer dúvida: <a href="mailto:<%= settings.store_email %>"><%= settings.store_email %></a> com o código <%= order.code %> no assunto.</p>
+  </div>
+</section>
+
+<%- include('partials/foot') %>

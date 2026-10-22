@@ -1,0 +1,28 @@
+# Livraria Trama — protótipo no Render (grátis)
+# render.com → New → Blueprint → aponta para este repo
+services:
+  - type: web
+    name: livraria-trama
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CHAT_SALT
+        generateValue: true
+      # o domínio público (preenche no dashboard: https://trama-demo.onrender.com)
+      - key: BASE_URL
+        sync: false
+      # credencial do CMS — preenche no dashboard
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_USER
+        value: trama
+      # opcional: checkout online (cartão/Multibanco/MB WAY)
+      - key: STRIPE_SECRET_KEY
+        sync: false

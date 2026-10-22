@@ -1,0 +1,54 @@
+<%- include('partials/head', { title: 'catálogo' }) %>
+
+<section class="seccao">
+  <h1 class="titulo-hero"><% if (cat) { %><%= t('tema_titulo') %> <em><%= cat %></em><% } else if (lang === 'en') { %>cat<em>alog</em>ue<% } else { %>cat<em>álogo</em><% } %></h1>
+
+  <div class="linha-cats">
+    <form method="get" action="/pesquisa" class="dropdown-cats" id="form-cats">
+      <% if (q) { %><input type="hidden" name="q" value="<%= q %>"><% } %>
+      <label for="cats-select"><%= t('categorias') %></label>
+      <select id="cats-select" name="cat" onchange="this.form.submit()">
+        <option value="" <%= !cat ? 'selected' : '' %>><%= t('todos_opt') %></option>
+        <% cats.forEach(function (w) { %>
+          <option value="<%= w.cat %>" <%= cat === w.cat ? 'selected' : '' %>><%= w.cat %> (<%= w.c %>)</option>
+        <% }) %>
+      </select>
+      <noscript><button class="botao mini" type="submit">ir</button></noscript>
+    </form>
+    <p class="tono"><%= total %> <%= t('resultados') %><%= q ? ' ' + t('para') + ' “' + q + '”' : '' %>
+      <% if (pages > 1) { %> · <%= t('pagina') %> <%= page %> / <%= pages %><% } %>
+    </p>
+  </div>
+
+  <% if ((q || cat) && !books.length) { %>
+    <p class="vazio"><%= t('nada_encontrado') %></p>
+  <% } %>
+
+  <div class="grelha">
+    <% books.forEach(function (b) { %>
+      <div class="cartao-livro">
+        <a class="capa" href="/livro/<%= b.id %>" data-livro="<%= b.id %>">
+          <% if (b.cover_url) { %><img src="<%= b.cover_url %>" alt="" loading="lazy"><% } else { %><div class="capa-vazia"></div><% } %>
+        </a>
+        <h3 class="cartao-titulo"><a href="/livro/<%= b.id %>" data-livro="<%= b.id %>"><%= b.title %></a></h3>
+        <p class="autor cartao-autor"><%= b.author %></p>
+        <p class="editora"><%= [b.publisher, b.isbn].filter(Boolean).join(' · ') %></p>
+        <div class="cartao-acoes">
+          <span class="preco"><%= fmt(b.price_cents) %><% if (b.stock > 1) { %> <small class="stock-n">×<%= b.stock %></small><% } %></span>
+          <button class="botao mini adicionar" data-id="<%= b.id %>" data-title="<%= b.title %>"><%= t('ao_cesto') %></button>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (pages > 1) { %>
+  <nav class="paginacao">
+    <% const qs = (p) => { const sp = new URLSearchParams(); if (q) sp.set('q', q); if (cat) sp.set('cat', cat); sp.set('page', p); return '/pesquisa?' + sp.toString(); }; %>
+    <% if (page > 1) { %><a class="botao fantasma mini" href="<%= qs(page - 1) %>"><%= t('anterior') %></a><% } else { %><span class="botao fantasma mini off"><%= t('anterior') %></span><% } %>
+    <span class="tono"><%= t('pagina') %> <%= page %> / <%= pages %></span>
+    <% if (page < pages) { %><a class="botao fantasma mini" href="<%= qs(page + 1) %>"><%= t('proxima') %></a><% } else { %><span class="botao fantasma mini off"><%= t('proxima') %></span><% } %>
+  </nav>
+  <% } %>
+</section>
+
+<%- include('partials/foot') %>

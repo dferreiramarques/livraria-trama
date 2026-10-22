@@ -1,0 +1,29 @@
+<%- include('partials/head', { title: book.title }) %>
+
+<section class="seccao livro-detalhe">
+  <div class="capa grande">
+    <% if (book.cover_url) { %><img src="<%= book.cover_url %>" alt=""><% } else { %><div class="capa-vazia"></div><% } %>
+  </div>
+  <div>
+    <p class="tono"><a href="/pesquisa">← catálogo</a></p>
+    <h1><%= book.title %></h1>
+    <p class="autor"><%= book.author || 'autor desconhecido' %></p>
+    <p class="ficha">
+      <%= [book.publisher, book.isbn && 'ISBN ' + book.isbn, book.category].filter(Boolean).join(' · ') %>
+    </p>
+    <p class="preco grande"><%= fmt(book.price_cents) %></p>
+    <p class="tono">
+      <% if (book.stock === 1) { %>último exemplar à vista<% } else { %><%= book.stock %> em prateleira<% } %>
+    </p>
+    <button class="botao adicionar" data-id="<%= book.id %>" data-title="<%= book.title %>">juntar ao cesto</button>
+    <p class="tono mini-note">recolha na loja ou envio · pagamento online, por transferência ou na loja</p>
+    <% if (book.description) { %>
+    <div class="descricao">
+      <% book.description.split('\n\n').forEach(function (par) { %><p><%= par.replace(/\n/g, '<br>') %></p><% }) %>
+    </div>
+    <% } %>
+    <p class="tono">«queres deixar a sorte decidir? <a href="/surpresa" data-surpresa>surpreende-me</a>»</p>
+  </div>
+</section>
+
+<%- include('partials/foot') %>

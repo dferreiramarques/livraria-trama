@@ -1,0 +1,15 @@
+<aside class="seccao wordcloud-wrap">
+  <% if (!cats.length) { %>
+    <p class="vazio">a nuvem accende quando o catálogo ganhar temas.</p>
+  <% } else { %>
+  <nav class="wordcloud" aria-label="temas">
+    <a class="w-todos<%= !(typeof cat !== 'undefined' && cat) ? ' activo' : '' %>" href="/pesquisa" title="todo o catálogo"><%= (typeof t !== 'undefined') ? t('filtro_todos') : 'todos' %></a>
+    <% cats.forEach(function (w) {
+         const rel = w.c / maxCatCount;
+         const tier = rel > 0.66 ? 3 : rel > 0.33 ? 2 : 1;
+         const activo = (typeof cat !== 'undefined') && cat === w.cat; %>
+      <a class="w-<%= tier %><%= activo ? ' activo' : '' %>" href="/pesquisa?cat=<%= encodeURIComponent(w.cat) %>" title="<%= w.c %> livro(s)"><%= w.cat %></a>
+    <% }) %>
+  </nav>
+  <% } %>
+</aside>

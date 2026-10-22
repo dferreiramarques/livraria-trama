@@ -1,0 +1,18 @@
+<%- include('partials/head', { title: ev.title }) %>
+
+<article class="seccao evento-det">
+  <p class="tono"><a href="/agenda"><%= t('voltar_eventos') %></a></p>
+  <span class="tipo-evento tipo-<%= ev.kind === 'exposicao' ? 'expo' : 'evento' %>"><%= ev.kind === 'exposicao' ? t('expo') : t('evento') %></span>
+  <h1><%= ev.title %></h1>
+  <p class="ficha">
+    <%= new Date(ev.starts_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+    <% if (ev.ends_at) { %> — <%= t('ate') %> <%= new Date(ev.ends_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT', { day: 'numeric', month: 'long', year: 'numeric' }) %><% } %>
+  </p>
+  <% if (ev.image_url) { %><img class="imagem-evento larga" src="<%= ev.image_url %>" alt=""><% } %>
+  <div class="descricao">
+    <% ev.description.split('\n\n').forEach(function (par) { %><p><%= par.replace(/\n/g, '<br>') %></p><% }) %>
+  </div>
+  <p class="tono"><%= t('linha_local') %></p>
+</article>
+
+<%- include('partials/foot') %>

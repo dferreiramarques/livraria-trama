@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <title><%= typeof tab !== 'undefined' ? tab + ' · ' : '' %>Gestão · Livraria Trama</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<% var _tab = typeof tab !== 'undefined' ? tab : ''; %>
+<header class="admin-topo">
+  <span class="marca">gestão trama</span>
+  <nav>
+    <a href="/admin" class="<%= _tab === 'inicio' ? 'activo' : '' %>">início</a>
+    <a href="/admin/encomendas" class="<%= _tab === 'encomendas' ? 'activo' : '' %>">encomendas</a>
+    <a href="/admin/livros" class="<%= _tab === 'livros' ? 'activo' : '' %>">livros</a>
+    <a href="/admin/eventos" class="<%= _tab === 'eventos' ? 'activo' : '' %>">eventos</a>
+    <a href="/admin/novidades" class="<%= _tab === 'novidades' ? 'activo' : '' %>">novidades</a>
+    <a href="/admin/chat" class="<%= _tab === 'chat' ? 'activo' : '' %>">chat</a>
+    <a href="/admin/definicoes" class="<%= _tab === 'definicoes' ? 'activo' : '' %>">definições</a>
+  </nav>
+  <span class="direita">
+    <span class="utente"><%= typeof username !== 'undefined' ? username : '' %></span>
+    <form method="post" action="/admin/logout"><button>saída</button></form>
+    <a href="/" target="_blank">ver site ↗</a>
+  </span>
+</header>
+<main class="admin-principal">

@@ -1,0 +1,22 @@
+<%- include('partials/head', { title: t('livestream'), topoSemBusca: false }) %>
+
+<section class="seccao">
+  <h1 class="titulo-hero">live<em>stream</em></h1>
+
+  <% if (settings.stream_url) { %>
+    <div class="live-encaixe">
+      <iframe src="<%= settings.stream_url %>"
+              title="livestream Livraria Trama"
+              frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+    <% if (stream_info) { %><p class="tono"><%= stream_info %></p><% } %>
+  <% } else { %>
+    <p class="vazio"><%= t('live_sem') %></p>
+    <p class="tono"><%= t('live_avis') %></p>
+  <% } %>
+
+  <p class="tono"><a href="https://www.youtube.com/@<%= settings.ig_handle %>" target="_blank" rel="noopener">YouTube · Trama</a> — <a href="https://www.twitch.tv" target="_blank" rel="noopener">Twitch</a></p>
+</section>
+
+<%- include('partials/foot') %>

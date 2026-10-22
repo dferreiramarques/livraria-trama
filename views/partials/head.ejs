@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Livraria Trama — livros, arte & al. Cultura contemporânea, filosofia e comics. Rua dos Bragas, 32, Porto.">
+  <title><%= typeof title !== 'undefined' ? title + ' · ' : '' %>Livraria Trama</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/site.css?v=7">
+</head>
+<body data-lang="<%= (typeof lang !== 'undefined') ? lang : 'pt' %>">
+<header class="topo<%= (typeof topoSemBusca !== 'undefined' && topoSemBusca) ? ' sem-busca' : '' %>">
+  <a class="logotipo" href="/">
+    <img src="/img/logo.png" alt="Livraria Trama" width="36" height="36">
+    <span>Livraria<b>Trama</b></span>
+  </a>
+<% const L = (typeof lang !== 'undefined') ? lang : 'pt'; const T = (typeof t !== 'undefined') ? t : ((k) => k); const qsLang = (l) => { const u = new URL('http://x' + req.originalUrl); u.searchParams.set('idioma', l); return u.pathname + '?' + u.searchParams.toString(); }; %>
+  <% if (!(typeof topoSemBusca !== 'undefined' && topoSemBusca)) { %>
+  <form class="mini-pesquisa" action="/pesquisa" method="get" autocomplete="off">
+    <input type="search" name="q" placeholder="<%= T('ph_mini') %>" aria-label="<%= T('procurar') %>">
+    <button type="submit"><%= T('procurar') %></button>
+  </form>
+  <% } %>
+  <nav>
+    <a href="/agenda"><%= T('eventos') %></a>
+    <a href="/pesquisa"><%= T('catalogo') %></a>
+    <a href="/livestream"><%= T('livestream') %></a>
+    <a href="/chat" class="chat-link" title="FreeSpeach">#trama</a>
+    <a href="/carrinho" class="carrinho-link"><%= T('cesto') %> <span id="cesto-count" class="count">0</span></a>
+    <span class="sw-idioma" role="group" aria-label="idioma">
+      <a href="<%= qsLang('pt') %>" class="<%= L === 'pt' ? 'activo' : '' %>">PT</a><span>·</span><a href="<%= qsLang('en') %>" class="<%= L === 'en' ? 'activo' : '' %>">EN</a>
+    </span>
+  </nav>
+</header>
+<main>

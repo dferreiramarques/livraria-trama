@@ -1,0 +1,87 @@
+<%- include('../partials/admin-top') %>
+
+<h1>novidades</h1>
+
+<section class="duas-colunas">
+  <div>
+    <h2>feed do Instagram</h2>
+    <% if (igEstado === 'ligado') { %><p class="ok">conta ligada ✓ — o token ficou guardado.</p><% } %>
+    <% if (igEstado.startsWith('erro:')) { %><p class="erro">falhou a ligação: <%= igEstado.slice(5) %></p><% } %>
+    <% if (igEstado === 'recusado') { %><p class="tono">não autorizaste — a conta continua desligada.</p><% } %>
+    <ol class="passos-ig">
+      <li>No Instagram: <b>Definições → Tipo de conta → mudar para conta profissional</b> (criativa ou empresa — revertível a qualquer momento).</li>
+      <li>Em <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com → Apps → Criar App</a>, escolhe <b>Instagram</b> (API with Instagram login) e anota <b>Client ID</b> e <b>Client Secret</b>.</li>
+      <li>Na mesma app, <b>Instagram → API setup → valid OAuth redirect URIs</b>: cola <code class="codigo"><%= igCallback || 'o endereço do passo 4' %></code>.</li>
+      <li>Aqui na <a href="/admin/definicoes">Definições</a>: cola Client ID, Client Secret e o callback (<code class="codigo">ig_callback</code>) e guarda.</li>
+      <li>Clica em <b>Ligar conta Instagram</b> abaixo → entra na tua conta → autoriza. O token de 60 dias + user id ficam gravados.</li>
+    </ol>
+    <% if (!igConfigured) { %>
+      <% if (igClientOk) { %>
+        <a class="botao" href="/admin/instagram/auth" target="_blank" rel="noopener">ligar conta Instagram</a>
+      <% } else { %>
+        <p class="tono">faltam Client ID / Secret / callback — completa os passos acima e volta.</p>
+      <% } %>
+    <% } else { %>
+      <p class="tono"><b>conta ligada.</b> a mostrar os últimos <%= igPosts.length %> posts automaticamente —
+        <a href="/admin/novidades?refresh=1">renovar token</a> ·
+        <form class="inline" method="post" action="/admin/instagram/desligar"><button class="mini-sub">desligar</button></form></p>
+      <% if (igError) { %><p class="erro">erro: <%= igError %> — tenta <a href="/admin/novidades?refresh=1">renovar o token</a>.</p><% } %>
+      <div class="ig-admin-grid">
+        <% igPosts.forEach(function (p) { %>
+          <a href="<%= p.permalink %>" target="_blank" rel="noopener" title="<%= p.caption %>">
+            <% if (p.image) { %><img src="<%= p.image %>" alt="" loading="lazy"><% } %>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <div>
+    <h2>entrada manual (o sempre-ali)</h2>
+    <p class="tono">além do Instagram, podes escolher imagens e textos à mão — também entram no feed.</p>
+    <form method="post" action="/admin/novidades/manual" class="ficha-form">
+      <label>texto <textarea name="caption" rows="2" maxlength="240"></textarea></label>
+      <label>imagem (ficheiro — fica guardada no site, nunca expira) <input type="file" accept="image/*" id="manual-imagem"></label>
+      <input type="hidden" name="image_data" id="manual-image-data">
+      <label>ou imagem (URL) <input name="image_url" placeholder="https://…"></label>
+      <p class="tono mini-note" id="manual-imagem-info"></p>
+      <button class="botao mini" type="submit">adicionar ao feed</button>
+    </form>
+    <script>
+    (function () {
+      var inp = document.getElementById("manual-imagem");
+      var hidden = document.getElementById("manual-image-data");
+      var info = document.getElementById("manual-imagem-info");
+      inp && inp.addEventListener("change", function () {
+        var f = inp.files && inp.files[0];
+        if (!f) { hidden.value = ""; info.textContent = ""; return; }
+        if (f.size > 2.5 * 1024 * 1024) { hidden.value = ""; info.textContent = "imagem grande demais (>2.5MB)."; return; }
+        var fr = new FileReader();
+        fr.onload = function () { hidden.value = fr.result; info.textContent = "\"" + f.name + "\" pronta (" + Math.round(f.size / 1024) + " kB) — vai com o formulário."; };
+        fr.readAsDataURL(f);
+      });
+    })();
+    </script>
+
+    <table class="admin-tabela">
+      <tr><th>texto</th><th>publicado</th><th></th></tr>
+      <% manual.forEach(function (n) { %>
+        <tr>
+          <td><%= (n.caption || '(só imagem)').slice(0, 60) %></td>
+          <td><%= n.published ? 'sim' : 'não' %></td>
+          <td class="num">
+            <form method="post" action="/admin/novidades/<%= n.id %>/acao" class="inline">
+              <button class="mini-btn" name="action" value="toggle">▾/▸</button>
+            </form>
+            <form method="post" action="/admin/novidades/<%= n.id %>/acao" class="inline" onsubmit="return confirm('apagar entrada manual?')">
+              <button class="mini-sub" name="action" value="apagar">✕</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!manual.length) { %><tr><td colspan="3" class="vazio">nada manual.</td></tr><% } %>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/admin-bottom') %>

@@ -1,0 +1,28 @@
+<%- include('../partials/admin-top') %>
+
+<h1>chat #trama — moderação</h1>
+<p class="tono">esconder = a mensagem desaparece de imediato para todos. apagar = limpar da bd. os hashes de rede são anónimos, mas servem para travar spam.</p>
+
+<table class="admin-tabela">
+  <tr><th class="mono">id</th><th>hora</th><th>nick</th><th>mensagem</th><th>visível</th><th></th></tr>
+  <% msgs.forEach(function (m) { %>
+    <tr class="<%= m.hidden ? 'linha-sold' : '' %>">
+      <td class="mono"><%= m.id %></td>
+      <td class="mono"><%= m.created_at.replace('T', ' ').slice(0, 16) %></td>
+      <td><%= m.nick %></td>
+      <td><%= m.body.length > 90 ? m.body.slice(0, 90) + '…' : m.body %></td>
+      <td><%= m.hidden ? 'escondido' : 'visível' %></td>
+      <td class="num">
+        <form method="post" action="/admin/chat/<%= m.id %>/acao" class="inline">
+          <button class="mini-btn" name="action" value="toggle"><%= m.hidden ? 'mostrar' : 'esconder' %></button>
+        </form>
+        <form method="post" action="/admin/chat/<%= m.id %>/acao" class="inline" onsubmit="return confirm('apagar para sempre?')">
+          <button class="mini-sub" name="action" value="apagar">✕</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  <% if (!msgs.length) { %><tr><td colspan="6" class="vazio">canal calado.</td></tr><% } %>
+</table>
+
+<%- include('../partials/admin-bottom') %>

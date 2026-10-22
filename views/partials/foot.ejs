@@ -1,0 +1,52 @@
+</main>
+<footer class="rodape">
+  <div class="rodape-grid">
+    <div>
+      <p class="logotipo-mini">Livraria<b>Trama</b></p>
+      <p><%= t('hero_a') %> <em><%= t('hero_b') %></em></p>
+      <p><%= settings.store_address %></p>
+      <p><%= settings.store_hours %></p>
+    </div>
+    <div>
+      <p><a href="/pesquisa"><%= t('rod_catalogo') %></a></p>
+      <p><a href="/agenda"><%= t('rod_agenda') %></a></p>
+      <p><a href="/arquivo?idioma=<%= lang %>"><%= t('rod_arquivo') %></a></p>
+      <p><a href="/chat"><%= t('rod_chat') %> #trama</a></p>
+      <p><a href="/livestream"><%= t('livestream') %></a></p>
+      <p><a href="/admin"><%= t('rod_gestao') %></a></p>
+    </div>
+    <div>
+      <p><a href="https://instagram.com/<%= settings.ig_handle %>">instagram @<%= settings.ig_handle %></a></p>
+      <p><a href="mailto:<%= settings.store_email %>"><%= settings.store_email %></a></p>
+      <% if (settings.store_phone) { %><p><%= settings.store_phone %></p><% } %>
+    </div>
+  </div>
+  <p class="rodape-fim">2026 Livraria Trama - developed by <a href="https://monco.io" target="_blank" rel="noopener">monco.io</a></p>
+</footer>
+<script src="/js/main.js"></script>
+<div class="livro-modal" id="livro-modal" hidden>
+  <div class="livro-modal-fundo" data-fechar></div>
+  <div class="livro-modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <button class="livro-modal-x" data-fechar title="fechar" aria-label="fechar">✕</button>
+    <div class="livro-modal-capa">
+      <img id="modal-capa" src="" alt="">
+      <div class="capa-vazia" id="modal-capa-vazia" hidden></div>
+    </div>
+    <div class="livro-modal-info">
+      <p class="tono ficha" id="modal-cat"></p>
+      <h3 id="modal-titulo"></h3>
+      <p id="modal-autor" class="autor"></p>
+      <p id="modal-ficha" class="ficha"></p>
+      <p id="modal-preco" class="preco grande"></p>
+      <p id="modal-stock" class="tono"></p>
+      <div class="horizontais">
+        <button class="botao" id="modal-adicionar"><%= t('ao_cesto') %></button>
+        <a class="botao fantasma" id="modal-ficha-link" href="#"><%= t('ficha_completa') %></a>
+      </div>
+      <p id="modal-feedback" class="tono"></p>
+      <p id="modal-desc" class="modal-desc"></p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<%- include('partials/head', { title: t('eventos') }) %>
+
+<section class="seccao" id="proximos">
+  <h1><%= t('agenda_h1') %></h1>
+  <p class="tono"><%= t('agenda_sub') %></p>
+
+  <% if (!upcoming.length) { %>
+    <p class="vazio"><%= t('vazio_agenda') %></p>
+  <% } else { %>
+  <div class="lista-eventos-ricos">
+    <% upcoming.forEach(function (e) { %>
+      <a class="cartao-evento" href="/evento/<%= e.id %>">
+        <% if (e.image_url) { %><img class="imagem-evento" src="<%= e.image_url %>" alt="" loading="lazy"><% } %>
+        <div class="info-evento">
+          <span class="tipo-evento tipo-<%= e.kind === 'exposicao' ? 'expo' : 'evento' %>"><%= e.kind === 'exposicao' ? t('expo') : t('evento') %></span>
+          <h3><%= e.title %></h3>
+          <p class="tono">
+            <%= new Date(e.starts_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) %>
+            <% if (e.ends_at) { %> → <%= new Date(e.ends_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT', { day: 'numeric', month: 'long' }) %><% } %>
+          </p>
+          <% if (e.description) { %><p class="desc-evento"><%= e.description.slice(0, 160) %><%= e.description.length > 160 ? '…' : '' %></p><% } %>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+  <% } %>
+</section>
+
+<section class="seccao" id="arquivo">
+  <div class="seccao-cabeca">
+    <h2><%= t('arquivo_h2') %></h2>
+    <p class="tono"><%= t('arquivo_sub') %></p>
+  </div>
+  <% if (!past.length) { %>
+    <p class="vazio"><%= t('vazio_arquivo') %></p>
+  <% } else { %>
+  <ul class="lista-eventos arquivo">
+    <% past.forEach(function (e) { %>
+      <li>
+        <span class="data-evento"><%= new Date(e.starts_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) %></span>
+        <div>
+          <span class="tipo-evento tipo-<%= e.kind === 'exposicao' ? 'expo' : 'evento' %>"><%= e.kind === 'exposicao' ? t('expo') : t('evento') %></span>
+          <a href="/evento/<%= e.id %>"><%= e.title %></a>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+  <% } %>
+</section>
+
+<%- include('partials/foot') %>

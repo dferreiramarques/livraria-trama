@@ -1,0 +1,71 @@
+<%- include('../partials/admin-top') %>
+
+<h1><%= book ? 'editar livro' : 'novo livro' %></h1>
+
+<form method="post" action="/admin/livros/save" class="ficha-form">
+  <input type="hidden" name="id" value="<%= book ? book.id : '' %>">
+
+  <section class="isbn-quick">
+    <label for="f-isbn">ISBN — <button type="button" id="palete-isbn" class="mini-btn">procurar dados no Google</button>
+      <span id="isbn-nota" class="tono">preenche título, autor, editora, capa e resumo.</span></label>
+  </section>
+
+  <div class="campo-duplo">
+    <label>título <input id="f-title" name="title" value="<%= book ? book.title : '' %>" required></label>
+    <label>autor <input id="f-author" name="author" value="<%= book ? book.author : '' %>"></label>
+  </div>
+  <div class="campo-duplo">
+    <label>editora <input id="f-publisher" name="publisher" value="<%= book ? book.publisher : '' %>"></label>
+    <label>ISBN <input id="f-isbn" name="isbn" value="<%= book ? book.isbn : '' %>"></label>
+  </div>
+  <div class="campo-trio">
+    <label>categoria <input id="f-category" name="category" value="<%= book ? book.category : '' %>" placeholder="filosofia / comics / arte…"></label>
+    <label>preço (€) <input name="price" value="<%= book ? (book.price_cents / 100).toFixed(2) : '' %>" placeholder="14,90"></label>
+    <label>stock <input type="number" name="stock" min="0" value="<%= book ? book.stock : 1 %>"></label>
+  </div>
+  <label>URL da capa <input id="f-cover" name="cover_url" value="<%= book ? book.cover_url : '' %>" placeholder="https://…"></label>
+  <label>descrição <textarea id="f-desc" name="description" rows="4"><%= book ? book.description : '' %></textarea></label>
+  <label>estado</label>
+  <select name="status">
+    <option value="available" <%= (book ? book.status : 'available') === 'available' ? 'selected' : '' %>>em prateleira (público)</option>
+    <option value="unpublished" <%= book && book.status === 'unpublished' ? 'selected' : '' %>>não-publicado (fora do site, guardado)</option>
+    <option value="sold" <%= book && book.status === 'sold' ? 'selected' : '' %>>vendido</option>
+  </select>
+  <label class="checkbox"><input type="checkbox" name="featured" <%= book && book.featured ? 'checked' : '' %>> destacar</label>
+
+  <% if (book && book.status !== 'available') { %>
+    <p class="aviso">este livro não está no site (estado: <%= book.status === 'sold' ? 'vendido' : 'não-publicado' %>). gravar com "em prateleira" e stock > 0 para voltar à vista.</p>
+  <% } %>
+
+  <div class="horizontais">
+    <button class="botao" type="submit">gravar</button>
+    <a class="botao fantasma" href="/admin/livros">voltar aos livros</a>
+  </div>
+</form>
+
+<script>
+(function () {
+  const btn = document.getElementById("palete-isbn");
+  if (!btn) return;
+  const nota = document.getElementById("isbn-nota");
+  btn.addEventListener("click", async () => {
+    const isbn = document.getElementById("f-isbn").value.trim();
+    if (!isbn) { nota.textContent = "escreve o ISBN primeiro."; return; }
+    nota.textContent = "a procurar no Google Books…";
+    try {
+      const r = await fetch("/admin/engine/google?isbn=" + encodeURIComponent(isbn));
+      const data = await r.json();
+      if (!r.ok || !data.livro) { nota.textContent = "não encontrei esse ISBN — preenche à mão."; return; }
+      const l = data.livro;
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      set("f-title", l.title); set("f-author", l.author); set("f-publisher", l.publisher);
+      set("f-category", l.category); set("f-cover", l.cover_url); set("f-desc", l.description);
+      nota.textContent = "ficha preenchida" + (l.year ? " (" + l.year + ")" : "") + " — confirma e grava.";
+    } catch {
+      nota.textContent = "falha a falar com o Google Books — consulta à mão.";
+    }
+  });
+})();
+</script>
+
+<%- include('../partials/admin-bottom') %>

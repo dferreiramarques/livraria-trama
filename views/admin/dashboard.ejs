@@ -1,0 +1,43 @@
+<%- include('../partials/admin-top') %>
+
+<h1>boletim do dia</h1>
+
+<section class="nums">
+  <div><span class="grande"><%= stats.pending %></span><span>encomendas a tratar</span></div>
+  <div><span class="grande"><%= stats.pickups %></span><span>dessas, recolha na loja</span></div>
+  <div><span class="grande">€ <%= (stats.euros30 / 100).toFixed(2) %></span><span>vendas pagas (30d)</span></div>
+  <div><span class="grande"><%= stats.paid30 %></span><span>encomendas pagas (30d)</span></div>
+</section>
+
+<section class="duas-colunas">
+  <div>
+    <h2>últimas encomendas</h2>
+    <table class="admin-tabela">
+      <tr><th>código</th><th>nome</th><th>entrega</th><th class="num">total</th><th>pagamento</th><th>estado</th></tr>
+      <% orders.slice(0, 12).forEach(function (o) { %>
+        <tr>
+          <td><a href="/admin/encomendas/<%= o.id %>"><%= o.code %></a></td>
+          <td><%= o.name %></td>
+          <td><%= o.delivery === 'ship' ? 'envio' : 'loja' %></td>
+          <td class="num"><%= fmt(o.total_cents) %></td>
+          <td><span class="chip <%= o.payment_status %>"><%= o.payment_status %></span></td>
+          <td><span class="chip estado"><%= o.status %></span></td>
+        </tr>
+      <% }) %>
+      <% if (!orders.length) { %><tr><td colspan="6" class="vazio">sem encomendas — as prateleiras esperam.</td></tr><% } %>
+    </table>
+  </div>
+  <div>
+    <h2>stock baixo</h2>
+    <ul>
+      <% lowStock.forEach(function (b) { %><li><%= b.title %> — <b><%= b.stock %></b> unidade(s)</li><% }) %>
+      <% if (!lowStock.length) { %><li class="vazio">tudo repleto.</li><% } %>
+    </ul>
+    <h2>atalhos</h2>
+    <p><a class="botao mini" href="/admin/livros/novo">+ novo livro</a>
+       <a class="botao mini fantasma" href="/admin/eventos">eventos</a>
+       <a class="botao mini fantasma" href="/admin/novidades">feed</a></p>
+  </div>
+</section>
+
+<%- include('../partials/admin-bottom') %>

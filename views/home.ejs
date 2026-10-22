@@ -1,0 +1,56 @@
+<%- include('partials/head', { title: 'livros, arte & al', topoSemBusca: true }) %>
+
+<section class="heroi">
+  <h1><%= t('hero_a') %> <em><%= t('hero_b') %></em></h1>
+
+  <form class="barra-pesquisa" action="/pesquisa" method="get" autocomplete="off">
+    <input type="search" id="q" name="q" placeholder="procura livro, autor, editora, ISBN…" value="<%= typeof q !== 'undefined' ? q : '' %>" autofocus>
+    <button type="submit">procurar</button>
+    <button type="button" id="cometa" class="cometa" title="um livro à sorte">☄️</button>
+    <div id="sugestoes" class="sugestoes" hidden></div>
+  </form>
+</section>
+
+<%- include('partials/wordcloud') %>
+
+<section class="seccao">
+  <% if (posts.length) { %>
+  <div class="feed-ig strip">
+    <% posts.slice(0, 6).forEach(function (p) { %>
+      <a class="feed-item" href="<%= p.permalink || p.url || (p.ig_shortcode ? ('https://www.instagram.com/p/' + p.ig_shortcode + '/') : ('https://instagram.com/' + settings.ig_handle)) %>" target="_blank" rel="noopener" title="<%= (p.caption || '').replace(/"/g, '&quot;') %>">
+        <% const src = p.image_url || p.image; if (src) { %><img src="<%= src %>" alt="" loading="lazy"><% } %>
+        <% if (p.caption) { %><span class="hover-capt"><%= p.caption %></span><% } %>
+      </a>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <iframe class="ig-embed"
+          src="https://www.instagram.com/<%= settings.ig_handle %>/embed"
+          title="feed do Instagram @<%= settings.ig_handle %>"
+          scrolling="no" allowtransparency="true" loading="lazy"></iframe>
+  <% } %>
+</section>
+
+<section class="seccao">
+  <div class="seccao-cabeca">
+    <h2><%= t('proximos_eventos') %></h2>
+    <a href="/agenda"><%= t('todos_link') %></a>
+  </div>
+  <% if (!upcoming.length) { %>
+    <p class="vazio"><%= t('nada_agend') %></p>
+  <% } else { %>
+    <ul class="lista-eventos">
+      <% upcoming.forEach(function (e) { %>
+        <li>
+          <span class="data-evento"><%= new Date(e.starts_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) %></span>
+          <div>
+            <span class="tipo-evento tipo-<%= e.kind === 'exposicao' ? 'expo' : 'evento' %>"><%= e.kind === 'exposicao' ? t('expo') : t('evento') %></span>
+            <a href="/evento/<%= e.id %>"><%= e.title %></a>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<%- include('partials/foot') %>

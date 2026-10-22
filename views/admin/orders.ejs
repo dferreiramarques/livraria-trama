@@ -1,0 +1,30 @@
+<%- include('../partials/admin-top') %>
+
+<h1>encomendas</h1>
+
+<p class="filtros">
+  <a class="chip <%= filter === '' ? 'chip-activo' : '' %>" href="/admin/encomendas">todas</a>
+  <a class="chip <%= filter === 'pendentes' ? 'chip-activo' : '' %>" href="/admin/encomendas?f=pendentes">a tratar (novas + confirmadas)</a>
+  <a class="chip <%= filter === 'pago' ? 'chip-activo' : '' %>" href="/admin/encomendas?f=pago">pagas à espera de saída</a>
+</p>
+
+<table class="admin-tabela">
+  <tr><th>código</th><th>data</th><th>nome</th><th>entrega</th><th class="num">livros</th><th class="num">total</th><th>pagamento</th><th>estado</th><th>fatura</th><th></th></tr>
+  <% orders.forEach(function (o) { %>
+    <tr>
+      <td><a href="/admin/encomendas/<%= o.id %>"><%= o.code %></a></td>
+      <td><%= o.created_at.slice(0, 16).replace('T', ' ') %></td>
+      <td><%= o.name %><br><span class="tono"><%= o.email %></span></td>
+      <td><%= o.delivery === 'ship' ? 'envio' : 'loja' %></td>
+      <td class="num"><%= o.qty_items || '—' %></td>
+      <td class="num"><%= fmt(o.total_cents) %></td>
+      <td><span class="chip <%= o.payment_status %>"><%= o.payment_status %></span> <span class="tono"><%= o.payment_method %></span></td>
+      <td><span class="chip estado"><%= o.status %></span></td>
+      <td><span class="tono"><%= o.moloni_status || '—' %></span></td>
+      <td><a class="botao mini" href="/admin/encomendas/<%= o.id %>">abrir</a></td>
+    </tr>
+  <% }) %>
+  <% if (!orders.length) { %><tr><td colspan="10" class="vazio">nada por aqui.</td></tr><% } %>
+</table>
+
+<%- include('../partials/admin-bottom') %>

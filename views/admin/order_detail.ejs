@@ -1,0 +1,61 @@
+<%- include('../partials/admin-top') %>
+
+<h1>encomenda <%= order.code %></h1>
+<p class="tono">recebida a <%= order.created_at.replace('T', ' ').slice(0, 19) %> · atualizada a <%= order.updated_at.replace('T', ' ').slice(0, 19) %></p>
+
+<section class="duas-colunas">
+  <div>
+    <h2>livros</h2>
+    <table class="admin-tabela">
+      <tr><th>título</th><th class="num">qty</th><th class="num">un.</th><th class="num">total</th></tr>
+      <% items.forEach(function (i) { %>
+        <tr><td><%= i.title %></td><td class="num"><%= i.qty %></td><td class="num"><%= fmt(i.unit_price_cents) %></td><td class="num"><%= fmt(i.unit_price_cents * i.qty) %></td></tr>
+      <% }) %>
+      <% if (order.shipping_cents > 0) { %><tr><td>envio</td><td colspan="2"></td><td class="num"><%= fmt(order.shipping_cents) %></td></tr><% } %>
+      <tr class="negrito"><td>total</td><td colspan="2"></td><td class="num"><%= fmt(order.total_cents) %></td></tr>
+    </table>
+
+    <h2>acções</h2>
+    <form method="post" action="/admin/encomendas/<%= order.id %>/acao" class="fazer-botoes">
+      <button class="botao mini <%= order.payment_status === 'paid' ? 'ok-feito' : '' %>" name="action" value="pago" <%= order.payment_status === 'paid' ? 'disabled' : '' %>>marcar pago + fatura</button>
+      <button class="botao mini fantasma" name="action" value="confirm" <%= order.status !== 'new' ? 'disabled' : '' %>>confirmar</button>
+      <% if (order.delivery === 'ship') { %>
+        <button class="botao mini" name="action" value="shipped" <%= ['shipped','done'].includes(order.status) ? 'disabled' : '' %>>enviada (avisa cliente)</button>
+      <% } else { %>
+        <button class="botao mini" name="action" value="ready" <%= order.status === 'ready' || order.status === 'done' ? 'disabled' : '' %>>pronta p/ recolha (avisa)</button>
+      <% } %>
+      <button class="botao mini fantasma" name="action" value="done" <%= order.status === 'done' ? 'disabled' : '' %>>entregue / fechada</button>
+      <button class="botao mini perigo" name="action" value="cancel" onclick="return confirm('cancelar a encomenda e repor stock?')">cancelar (+ repõe stock)</button>
+      <button class="botao mini fantasma" name="action" value="invoice" <%= order.moloni_status === 'invoiced' ? 'disabled' : '' %>>emitir fatura de novo</button>
+    </form>
+
+    <h2>nota interna</h2>
+    <form method="post" action="/admin/encomendas/<%= order.id %>/acao">
+      <input type="hidden" name="action" value="note">
+      <textarea name="note" rows="2" style="width:100%"><%= order.internal_note %></textarea>
+      <button class="botao mini fantasma" type="submit">guardar nota</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>cliente</h2>
+    <p class="kv"><b>nome</b> <%= order.name %></p>
+    <p class="kv"><b>email</b> <a href="mailto:<%= order.email %>"><%= order.email %></a></p>
+    <p class="kv"><b>telefone</b> <%= order.phone || '—' %></p>
+    <p class="kv"><b>nif</b> <%= order.vat || '—' %></p>
+    <p class="kv"><b>entrega</b> <%= order.delivery === 'ship' ? 'envio' : 'recolha na loja' %></p>
+    <% if (order.delivery === 'ship') { %>
+      <p class="kv"><b>morada</b> <%= order.address %></p>
+      <p class="kv"><b>c. postal</b> <%= order.postal %> · <b>cidade</b> <%= order.city %></p>
+    <% } %>
+    <p class="kv"><b>pagamento</b> <%= order.payment_method %> · <span class="chip <%= order.payment_status %>"><%= order.payment_status %></span></p>
+    <p class="kv"><b>estado</b> <span class="chip estado"><%= order.status %></span></p>
+    <p class="kv"><b>fatura</b> <%= order.moloni_status || '—' %> <%= order.moloni_doc_id ? '· doc ' + order.moloni_doc_id : '' %></p>
+    <p class="kv"><b>stripe</b> <%= order.stripe_session_id || '—' %></p>
+    <% if (order.note) { %><p class="kv"><b>nota do cliente</b> <%= order.note %></p><% } %>
+  </div>
+</section>
+
+<p><a href="/admin/encomendas">← todas as encomendas</a></p>
+
+<%- include('../partials/admin-bottom') %>

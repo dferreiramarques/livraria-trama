@@ -1,0 +1,51 @@
+<%- include('partials/head', { title: t('cesto') }) %>
+
+<section class="seccao">
+  <h1><%= t('cesto') %></h1>
+
+  <div id="cesto-area">
+    <div id="cesto-lista"></div>
+
+    <form id="formulario-encomenda" hidden>
+      <h2><%= t('os_dados') %></h2>
+      <div class="campo-duplo">
+        <label><%= t('nome') %> <input name="name" required></label>
+        <label><%= t('email_lbl') %> <input name="email" type="email" required></label>
+      </div>
+      <div class="campo-duplo">
+        <label><%= t('telefone') %> <input name="phone"></label>
+        <label><%= t('nif') %> <input name="vat"></label>
+      </div>
+
+      <h2><%= t('entrega') %></h2>
+      <label class="opcao"><input type="radio" name="delivery" value="pickup" checked> <%= t('recolha') %></label>
+      <label class="opcao"><input type="radio" name="delivery" value="ship"> <%= t('envio_ctt_a') %><span id="preco-envio"></span><%= t('envio_ctt_b') %><span id="grátis-envio"></span>)</label>
+      <div id="endereco-campos" hidden>
+        <label><%= t('morada') %> <input name="address"></label>
+        <div class="campo-duplo">
+          <label><%= t('postal') %> <input name="postal"></label>
+          <label><%= t('cidade') %> <input name="city"></label>
+        </div>
+      </div>
+
+      <h2><%= t('pagamento') %></h2>
+      <label class="opcao"><input type="radio" name="payment" value="stripe" checked> <%= t('pag_stripe') %></label>
+      <label class="opcao"><input type="radio" name="payment" value="transfer"> <%= t('pag_transferencia') %></label>
+      <label class="opcao"><input type="radio" name="payment" value="store"> <%= t('pag_loja') %></label>
+
+      <label><%= t('nota') %> <textarea name="note" rows="2" placeholder="<%= t('ph_nota') %>"></textarea></label>
+
+      <p class="tono" id="total-linha"></p>
+      <button class="botao grande" type="submit"><%= t('finalizar') %></button>
+      <p class="tono mini-note"><%= t('stripe_nota') %></p>
+    </form>
+
+    <div id="cesto-vazio">
+      <p class="vazio"><%= t('vazio1') %> <a href="/pesquisa"><%= t('procura_algo') %></a>, <%= t('ou_sort') %> <a href="/surpresa" data-surpresa><%= t('a_sorte') %></a>.</p>
+    </div>
+  </div>
+</section>
+
+<script>window.TRAMA_SHIPPING = <%= settings.shipping_cents %>; window.TRAMA_FREE = <%= settings.free_shipping_cents %>;</script>
+<script src="/js/checkout.js"></script>
+<%- include('partials/foot') %>

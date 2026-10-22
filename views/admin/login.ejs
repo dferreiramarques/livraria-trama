@@ -1,0 +1,14 @@
+<%- include('../partials/admin-top') %>
+
+<section class="painel">
+  <h1>entrar na gestão</h1>
+  <% if (error) { %><p class="erro"><%= error %></p><% } %>
+  <form method="post" action="/admin/login" class="form-login">
+    <input type="hidden" name="next" value="<%= next %>">
+    <label>utilizador <input name="username" autocomplete="username" required autofocus></label>
+    <label>password <input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="botao" type="submit">entrar</button>
+  </form>
+</section>
+
+<%- include('../partials/admin-bottom') %>
