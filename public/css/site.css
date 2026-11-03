@@ -98,13 +98,13 @@ main { max-width: 78rem; margin: 0 auto; padding: 0 1.2rem 3rem; }
 .heroi-sub { color: var(--tinta-2); margin: .4rem 0 2rem; }
 .barra-pesquisa {
   position: relative;
-  display: flex; max-width: 40rem; margin: 0 auto;
+  display: flex; width: 100%; max-width: 40rem; margin: 0 auto;
   border: 2px solid var(--tinta); background: #fff;
   box-shadow: 4px 4px 0 var(--rosa);
 }
 .barra-pesquisa.linha { margin-bottom: .5rem; }
 .barra-pesquisa input[type="search"] {
-  flex: 1; border: 0; font: inherit; padding: .8rem 1rem; background: transparent;
+  flex: 1; min-width: 0; border: 0; font: inherit; padding: .8rem 1rem; background: transparent;
   outline: none;
 }
 .barra-pesquisa button {
