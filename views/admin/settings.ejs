@@ -73,8 +73,11 @@
 </form>
 
 <h2>conta '<%= username %>'</h2>
+<% if (typeof contaErro !== 'undefined' && contaErro === 'errada') { %><p class="aviso erro">password atual errada.</p><% } %>
+<% if (typeof contaErro !== 'undefined' && contaErro === 'curta') { %><p class="aviso erro">a nova password precisa de 8+ caracteres.</p><% } %>
 <form method="post" action="/admin/conta" class="inline-form">
-  <label>nova password (mín. 8) <input type="password" name="new_password" minlength="8" required></label>
+  <label>password atual <input type="password" name="current_password" autocomplete="current-password" required></label>
+  <label>nova password (mín. 8) <input type="password" name="new_password" autocomplete="new-password" minlength="8" required></label>
   <button class="botao mini" type="submit">mudar password</button>
 </form>
 

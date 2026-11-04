@@ -5,8 +5,12 @@ const mail = require("../src/mail");
 const instagram = require("../src/instagram");
 const payments = require("../src/payments");
 const moloni = require("../src/moloni");
+const { rateLimit } = require("../src/security");
 
 const router = express.Router();
+
+// Trava de abuso no checkout: no máx. 10 encomendas por IP / 10 min.
+const orderLimiter = rateLimit({ windowMs: 10 * 60_000, max: 10, message: "demasiadas encomendas seguidas — tenta daqui a pouco." });
 
 const AVAILABLE = "status = 'available' AND stock > 0";
 const fmt = (cents) => (cents / 100).toFixed(2).replace(".", ",") + "€";
@@ -136,7 +140,7 @@ router.get("/carrinho", (req, res) => {
   res.render("cart", { settings: allSettings() });
 });
 
-router.post("/api/orders", express.json(), async (req, res) => {
+router.post("/api/orders", orderLimiter, express.json(), async (req, res) => {
   const { items, name, email, phone, vat, delivery, address, postal, city, note, payment } = req.body || {};
   if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: "carrinho vazio" });
   if (!name || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "nome e email válidos obrigatórios" });
@@ -162,17 +166,33 @@ router.post("/api/orders", express.json(), async (req, res) => {
   if (delivery === "pickup" || payment === "store") shippingCents = 0;
 
   const code = db.genOrderCode();
-  const tx = db.db;
-  tx.prepare(
-    `INSERT INTO orders (code, name, email, phone, vat, delivery, address, postal, city, note, shipping_cents, total_cents, payment_method, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(code, name, email, phone || "", vat || "", delivery, address || "", postal || "", city || "", note || "",
-    shippingCents, subtotal + shippingCents, payment, db.now(), db.now());
-  const order = tx.prepare("SELECT * FROM orders WHERE code = ?").get(code);
-  const add = tx.prepare("INSERT INTO order_items (order_id, book_id, title, qty, unit_price_cents) VALUES (?, ?, ?, ?, ?)");
-  for (const it of out) {
-    add.run(order.id, it.id, it.title, it.qty, it.unit_price_cents);
-    tx.prepare("UPDATE books SET stock = stock - ? WHERE id = ?").run(it.qty, it.id);
+  let order;
+  try {
+    order = db.tx(() => {
+      const info = db.db.prepare(
+        `INSERT INTO orders (code, name, email, phone, vat, delivery, address, postal, city, note, shipping_cents, total_cents, payment_method, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(code, name, email, phone || "", vat || "", delivery, address || "", postal || "", city || "", note || "",
+        shippingCents, subtotal + shippingCents, payment, db.now(), db.now());
+      const orderId = Number(info.lastInsertRowid);
+
+      const add = db.db.prepare("INSERT INTO order_items (order_id, book_id, title, qty, unit_price_cents) VALUES (?, ?, ?, ?, ?)");
+      const dec = db.db.prepare("UPDATE books SET stock = stock - ? WHERE id = ? AND status = 'available' AND stock >= ?");
+      for (const it of out) {
+        // decremento condicional: se o stock já não chega (corrida), aborta a transação inteira
+        const r = dec.run(it.qty, it.id, it.qty);
+        if (r.changes !== 1) {
+          const err = new Error(`"${it.title}" esgotou-se entretanto`);
+          err.httpStatus = 409;
+          throw err;
+        }
+        add.run(orderId, it.id, it.title, it.qty, it.unit_price_cents);
+      }
+      return db.db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
+    });
+  } catch (err) {
+    if (err.httpStatus === 409) return res.status(409).json({ error: err.message });
+    throw err;
   }
 
   // Stripe checkout quando aplicável
@@ -183,7 +203,7 @@ router.post("/api/orders", express.json(), async (req, res) => {
       const session = await payments.createCheckout(orderWithShipping, out);
       if (session) {
         payUrl = session.url;
-        tx.prepare("UPDATE orders SET stripe_session_id = ? WHERE id = ?").run(session.id, order.id);
+        db.db.prepare("UPDATE orders SET stripe_session_id = ? WHERE id = ?").run(session.id, order.id);
       }
     } catch (err) {
       console.error("[stripe]", err.message);

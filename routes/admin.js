@@ -6,8 +6,18 @@ const instagram = require("../src/instagram");
 const payments = require("../src/payments");
 const moloni = require("../src/moloni");
 const { requireAdmin } = require("../src/auth");
+const { rateLimit } = require("../src/security");
 
 const router = express.Router();
+
+// Trava anti-força-bruta no login do CMS.
+const loginLimiter = rateLimit({ windowMs: 15 * 60_000, max: 10, message: "demasiadas tentativas de login — tenta daqui a 15 min." });
+
+// Só aceita caminhos internos em redirects (?next=, back=) — bloqueia open redirect.
+function safeLocal(url, fallback) {
+  const u = String(url || "");
+  return /^\/(?!\/)/.test(u) ? u : fallback;
+}
 const now = () => db.now();
 const fmt = (c) => (c / 100).toFixed(2).replace(".", ",") + "€";
 
@@ -22,7 +32,7 @@ router.get("/login", (req, res) => {
   res.render("admin/login", { error: null, next: req.query.next || "" });
 });
 
-router.post("/login", express.urlencoded({ extended: false }), (req, res) => {
+router.post("/login", loginLimiter, express.urlencoded({ extended: false }), (req, res) => {
   const { verifyUser } = require("../src/auth");
   const user = verifyUser(String(req.body.username || ""), String(req.body.password || ""));
   if (!user) {
@@ -31,7 +41,7 @@ router.post("/login", express.urlencoded({ extended: false }), (req, res) => {
   }
   req.session.userId = user.id;
   req.session.username = user.username;
-  res.redirect(String(req.body.next || "/admin"));
+  res.redirect(safeLocal(req.body.next, "/admin"));
 });
 
 router.post("/logout", (req, res) => {
@@ -82,9 +92,13 @@ router.post("/encomendas/:id/acao", express.urlencoded({ extended: false }), asy
   const action = req.body.action;
 
   if (action === "pago") {
+    const alreadyPaid = order.payment_status === "paid";
     db.db.prepare(`UPDATE orders SET payment_status = 'paid', status = CASE WHEN status='new' THEN 'confirmed' ELSE status END, updated_at = ? WHERE id = ?`).run(now(), order.id);
-    await moloni.createInvoiceForOrder(order,
-      db.db.prepare("SELECT title, qty, unit_price_cents FROM order_items WHERE order_id = ?").all(order.id));
+    // só tenta faturar se ainda não estava paga (evita fatura Moloni duplicada)
+    if (!alreadyPaid) {
+      await moloni.createInvoiceForOrder(order,
+        db.db.prepare("SELECT title, qty, unit_price_cents FROM order_items WHERE order_id = ?").all(order.id));
+    }
   }
   if (action === "cancel") {
     db.db.prepare(`UPDATE orders SET payment_status = 'canceled', status = 'canceled', updated_at = ? WHERE id = ?`).run(now(), order.id);
@@ -112,7 +126,7 @@ router.post("/encomendas/:id/acao", express.urlencoded({ extended: false }), asy
     await moloni.createInvoiceForOrder(order,
       db.db.prepare("SELECT title, qty, unit_price_cents FROM order_items WHERE order_id = ?").all(order.id));
   }
-  res.redirect(req.body.back || `/admin/encomendas/${order.id}`);
+  res.redirect(safeLocal(req.body.back, `/admin/encomendas/${order.id}`));
 });
 
 /* ---------- Livros ---------- */
@@ -233,7 +247,7 @@ router.post("/livros/:id/acao", express.urlencoded({ extended: false }), (req, r
       }
       break;
   }
-  res.redirect(req.body.back || "/admin/livros");
+  res.redirect(safeLocal(req.body.back, "/admin/livros"));
 });
 
 /* ---------- Eventos / Exposições ---------- */
@@ -345,7 +359,7 @@ router.post("/chat/:id/acao", express.urlencoded({ extended: false }), (req, res
 
 /* ---------- Definições ---------- */
 router.get("/definicoes", (req, res) => {
-  res.render("admin/settings", { tab: "definicoes", s: allSettings(), username: req.session.username, saved: req.query.saved === "1" });
+  res.render("admin/settings", { tab: "definicoes", s: allSettings(), username: req.session.username, saved: req.query.saved === "1", contaErro: String(req.query.conta || "") });
 });
 
 const SETTING_FIELDS = [
@@ -367,10 +381,13 @@ router.post("/definicoes", express.urlencoded({ extended: false }), (req, res) =
 
 /* ---------- Conta ---------- */
 router.post("/conta", express.urlencoded({ extended: false }), (req, res) => {
-  const { hashPassword } = require("../src/auth");
+  const { hashPassword, verifyUser } = require("../src/auth");
   const crypto = require("crypto");
+  const cur = String(req.body.current_password || "");
   const pw = String(req.body.new_password || "");
-  if (pw.length < 8) return res.redirect("/admin/definicoes");
+  // exige a password atual (impede troca por sessão alheia / CSRF)
+  if (!verifyUser(req.session.username, cur)) return res.redirect("/admin/definicoes?conta=errada");
+  if (pw.length < 8) return res.redirect("/admin/definicoes?conta=curta");
   const salt = crypto.randomBytes(16).toString("hex");
   db.db.prepare("UPDATE users SET pw_hash = ?, salt = ? WHERE id = ?").run(hashPassword(pw, salt), salt, req.session.userId);
   res.redirect("/admin/definicoes?saved=1");

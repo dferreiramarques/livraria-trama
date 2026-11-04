@@ -127,6 +127,7 @@ const DEFAULT_SETTINGS = {
   iban: "",
   mbway: "",
   chat_welcome: "Bem-vindo ao canal #trama. Falemos de livros, arte e outras tramas.",
+  stripe_hold_minutes: "120",
 };
 
 for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) {
@@ -142,4 +143,44 @@ function genOrderCode() {
   return code;
 }
 
-module.exports = { db, now, getSetting, setSetting, genOrderCode };
+/* Executa fn dentro de uma transação (atómica). Faz ROLLBACK se fn atirar. */
+function tx(fn) {
+  db.exec("BEGIN");
+  try {
+    const r = fn();
+    db.exec("COMMIT");
+    return r;
+  } catch (e) {
+    try { db.exec("ROLLBACK"); } catch { /* já abortada */ }
+    throw e;
+  }
+}
+
+/* Liberta encomendas Stripe "pendentes" abandonadas (carrinho online nunca pago):
+   repõe o stock e marca a encomenda como cancelada. Não toca em transferência/loja,
+   que são reservas geridas manualmente pela livraria. Devolve nº de encomendas libertadas. */
+function releaseAbandonedStripeOrders(minutes = 120) {
+  const cutoff = new Date(Date.now() - Math.max(1, minutes) * 60_000).toISOString();
+  const stale = db
+    .prepare(`SELECT id FROM orders
+              WHERE payment_method = 'stripe' AND payment_status = 'pending'
+                AND status = 'new' AND created_at < ?`)
+    .all(cutoff);
+  let released = 0;
+  for (const o of stale) {
+    tx(() => {
+      const upd = db
+        .prepare("UPDATE orders SET status = 'canceled', payment_status = 'canceled', updated_at = ? WHERE id = ? AND payment_status = 'pending' AND status = 'new'")
+        .run(now(), o.id);
+      if (upd.changes !== 1) return; // mudou entretanto — não repor stock
+      const items = db.prepare("SELECT book_id, qty FROM order_items WHERE order_id = ?").all(o.id);
+      for (const it of items) {
+        if (it.book_id) db.prepare("UPDATE books SET stock = stock + ? WHERE id = ?").run(it.qty, it.book_id);
+      }
+      released++;
+    });
+  }
+  return released;
+}
+
+module.exports = { db, now, getSetting, setSetting, genOrderCode, tx, releaseAbandonedStripeOrders };

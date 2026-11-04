@@ -10,6 +10,7 @@ const { createAdmin } = require("./src/auth");
 const publicRoutes = require("./routes/public");
 const apiRoutes = require("./routes/api");
 const adminRoutes = require("./routes/admin");
+const { securityHeaders } = require("./src/security");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,7 @@ app.set("views", path.join(__dirname, "views"));
 
 if (process.env.TRUST_PROXY) app.set("trust proxy", 1);
 
+app.use(securityHeaders);
 app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
 app.use(session({
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
@@ -80,6 +82,20 @@ app.use((err, req, res, next) => {
   console.error("[erro]", err);
   res.status(500).send("Algo rebentou nas costuras. Tenta outra vez.");
 });
+
+// Varre periodicamente as encomendas Stripe abandonadas e repõe o stock reservado.
+function sweepAbandonedOrders() {
+  try {
+    const mins = Number(db.getSetting("stripe_hold_minutes") || 120);
+    const n = db.releaseAbandonedStripeOrders(mins);
+    if (n) console.log(`[stock] ${n} encomenda(s) Stripe abandonada(s) libertada(s) (stock reposto).`);
+  } catch (err) {
+    console.error("[stock]", err.message);
+  }
+}
+const sweepTimer = setInterval(sweepAbandonedOrders, 15 * 60 * 1000);
+if (sweepTimer.unref) sweepTimer.unref();
+sweepAbandonedOrders();
 
 app.listen(PORT, () => {
   console.log(`Trama a tecer-se em ${BASE_URL}`);
